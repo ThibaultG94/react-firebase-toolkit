@@ -5,10 +5,13 @@ import { auth, db } from './utils/firebase.config';
 import CreatePost from './components/CreatePost';
 import { collection, doc, getDocs } from 'firebase/firestore';
 import Post from './components/Post';
+import { useDispatch, useSelector } from 'react-redux';
+import { getPosts } from './feature/post.slice';
 
 const App = () => {
 	const [user, setUser] = useState(null);
-	const [posts, setPosts] = useState([]);
+	const dispatch = useDispatch();
+	const posts = useSelector((state) => state.posts.posts);
 
 	onAuthStateChanged(auth, (currentUser) => {
 		setUser(currentUser);
@@ -16,7 +19,9 @@ const App = () => {
 
 	useEffect(() => {
 		getDocs(collection(db, 'posts')).then((res) =>
-			setPosts(res.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+			dispatch(
+				getPosts(res.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+			)
 		);
 	}, []);
 
@@ -43,8 +48,8 @@ const App = () => {
 				)}
 			</div>
 			<div className="posts-container">
-				{posts.length > 0 &&
-					posts
+				{posts &&
+					[...posts]
 						.sort((a, b) => b.date - a.date)
 						.map((post) => (
 							<Post post={post} key={post.id} user={user} />
